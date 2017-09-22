@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc" xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+        http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd
+        http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.2.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+        http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.3.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd">
+	<!--配置数据库连接信息 -->
+	<util:properties id="jdbc" location="classpath:db.properties" />
+	<!--配置数据源 配置dbcp数据库连接池 -->
+	<bean id="ds" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="url" value="#{jdbc.url}"></property>
+		<property name="driverClassName" value="#{jdbc.driver}"></property>
+		<property name="username" value="#{jdbc.username}"></property>
+		<property name="password" value="#{jdbc.password}"></property>
+		<!-- 连接池的最大值 -->
+		<property name="maxActive" value="#{jdbc.maxActive}"></property>
+		<property name="maxWait" value="#{jdbc.maxWait}"></property>
+	</bean> 
+	
+	<!--配置 mybatis 的session 工厂 -->
+<!-- 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="ds"></property>
+		<property name="mapperLocations" value="classpath:com/snail/dao/sql/*.xml"></property>
+	</bean> 
+-->
+<!-- 
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory" />
+	</bean>
+ -->	
+	<!-- 扫描指定包下面的所有接口，来 匹配和映射我们的sql数据 -->	
+<!-- 	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.snail.dao"></property>
+	</bean>  
+-->
+	 
+	<!--声明 我们的事物管理组件 -->
+	<bean id="txManage"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="ds"></property>
+	</bean>
+	
+	<!--XML的配置 事物的方式 -->
+	<tx:advice id="txAdvice" transaction-manager="txManage">
+		<tx:attributes>
+			<tx:method name="find*" read-only="true" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" />
+			<tx:method name="save*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+		</tx:attributes>
+	</tx:advice>
+	 
+	<!--开启注解扫描 -->
+	<context:component-scan base-package="com.snail.mot"></context:component-scan>
+	<!-- 资源管理 -->
+	<mvc:default-servlet-handler/>
+	<!-- 开启MVC注解扫描组件 -->
+	<mvc:annotation-driven />
+	<!-- 定义视图解析器ViewResolver -->
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/jsp/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+</beans>
+ 
